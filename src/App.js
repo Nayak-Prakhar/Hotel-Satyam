@@ -7,7 +7,7 @@ import {
   signOut
 } from 'firebase/auth';
 
-const ADMIN_UID = "replace-with-your-admin-uid";
+const ADMIN_UID = "mZFDI5RBWSTR43r6kBIAGvXf80t1";
 
 const App = () => {
   const [user, setUser] = useState(null);
