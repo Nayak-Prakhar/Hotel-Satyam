@@ -1,201 +1,174 @@
-import React, { useEffect, useState } from "react";
-import { auth, db, ref, set, onValue, remove } from "./firebase";
+import React, { useState, useEffect } from 'react';
+import { db, ref, set, onValue, remove, auth } from './firebase';
 import {
-  GoogleAuthProvider,
-  signInWithPopup,
   onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from 'firebase/auth';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const ADMIN_UID = "mZFDI5RBWSTR43r6kBIAGvXf80t1";
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [newBooking, setNewBooking] = useState({
-    guestName: "",
-    roomId: "",
-    checkIn: "",
-    checkOut: "",
+    guestName: '',
+    roomId: '',
+    checkIn: '',
+    checkOut: '',
     guests: 1,
     amount: 0,
   });
 
   useEffect(() => {
     onAuthStateChanged(auth, (u) => setUser(u));
-    onValue(ref(db, "bookings"), (snapshot) => {
+    onValue(ref(db, 'bookings'), (snapshot) => {
       const data = snapshot.val();
       setBookings(data ? Object.values(data) : []);
     });
   }, []);
 
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(alert);
+  const handleLogin = () => {
+    signInWithEmailAndPassword(auth, email, password).catch((err) =>
+      alert(err.message)
+    );
+  };
+
+  const handleSignup = () => {
+    createUserWithEmailAndPassword(auth, email, password).catch((err) =>
+      alert(err.message)
+    );
   };
 
   const handleLogout = () => signOut(auth);
 
   const handleBooking = () => {
     const id = Date.now();
-    set(ref(db, "bookings/" + id), { ...newBooking, id });
+    const booking = { ...newBooking, id };
+    set(ref(db, `bookings/${id}`), booking);
     setNewBooking({
-      guestName: "",
-      roomId: "",
-      checkIn: "",
-      checkOut: "",
+      guestName: '',
+      roomId: '',
+      checkIn: '',
+      checkOut: '',
       guests: 1,
       amount: 0,
     });
   };
 
   const handleDelete = (id) => {
-    remove(ref(db, "bookings/" + id));
+    remove(ref(db, `bookings/${id}`));
   };
 
-  const downloadInvoice = (booking) => {
+  const downloadInvoice = (b) => {
     const doc = new jsPDF();
     doc.text("Hotel Satyam - Booking Invoice", 14, 20);
     doc.autoTable({
       startY: 30,
       head: [["Field", "Details"]],
       body: [
-        ["Guest", booking.guestName],
-        ["Room", booking.roomId],
-        ["Check-in", booking.checkIn],
-        ["Check-out", booking.checkOut],
-        ["Guests", booking.guests],
-        ["Amount", "₹" + booking.amount],
+        ["Guest", b.guestName],
+        ["Room", b.roomId],
+        ["Check-in", b.checkIn],
+        ["Check-out", b.checkOut],
+        ["Guests", b.guests],
+        ["Amount", "₹" + b.amount],
       ],
     });
-    doc.save(`Invoice_${booking.guestName}.pdf`);
+    doc.save(`Invoice_${b.guestName}.pdf`);
   };
 
-  const today = new Date().toISOString().split("T")[0];
-  const currentGuests = bookings.filter((b) => today >= b.checkIn && today < b.checkOut);
-  const totalRevenue = bookings.reduce((sum, b) => sum + b.amount, 0);
-
   return (
-    <div className="p-6 font-sans bg-gray-100 min-h-screen">
+    <div style={{ padding: 20, fontFamily: 'Arial' }}>
       {!user ? (
-        <div className="max-w-md mx-auto mt-20 text-center bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">Login to Hotel Satyam</h2>
-          <button
-            onClick={signInWithGoogle}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Sign in with Google
-          </button>
+        <div>
+          <h2>Login or Sign Up</h2>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          /><br /><br />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          /><br /><br />
+          <button onClick={handleLogin}>Login</button>
+          <button onClick={handleSignup} style={{ marginLeft: 10 }}>Sign Up</button>
         </div>
       ) : (
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Welcome, {user.displayName || user.email}</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-            >
-              Logout
-            </button>
-          </div>
+        <div>
+          <h2>Welcome, {user.email}</h2>
+          <button onClick={handleLogout}>Logout</button>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-white p-4 rounded shadow text-center">
-              <p className="text-gray-600">Total Bookings</p>
-              <p className="text-2xl font-bold">{bookings.length}</p>
-            </div>
-            <div className="bg-white p-4 rounded shadow text-center">
-              <p className="text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-green-600">₹{totalRevenue}</p>
-            </div>
-            <div className="bg-white p-4 rounded shadow text-center">
-              <p className="text-gray-600">Guests Checked In Today</p>
-              <p className="text-2xl font-bold text-blue-600">{currentGuests.length}</p>
-            </div>
-          </div>
+          <hr style={{ margin: '20px 0' }} />
 
-          <div className="bg-white p-4 rounded shadow mb-6">
-            <h2 className="text-lg font-semibold mb-4">Create a Booking</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                className="border p-2 rounded"
-                placeholder="Guest Name"
-                value={newBooking.guestName}
-                onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })}
-              />
-              <input
-                className="border p-2 rounded"
-                placeholder="Room ID"
-                value={newBooking.roomId}
-                onChange={(e) => setNewBooking({ ...newBooking, roomId: e.target.value })}
-              />
-              <input
-                className="border p-2 rounded"
-                type="date"
-                value={newBooking.checkIn}
-                onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })}
-              />
-              <input
-                className="border p-2 rounded"
-                type="date"
-                value={newBooking.checkOut}
-                onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })}
-              />
-              <input
-                className="border p-2 rounded"
-                type="number"
-                min="1"
-                placeholder="Guests"
-                value={newBooking.guests}
-                onChange={(e) => setNewBooking({ ...newBooking, guests: +e.target.value })}
-              />
-              <input
-                className="border p-2 rounded"
-                type="number"
-                placeholder="Amount (₹)"
-                value={newBooking.amount}
-                onChange={(e) => setNewBooking({ ...newBooking, amount: +e.target.value })}
-              />
-            </div>
-            <button
-              onClick={handleBooking}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Save Booking
-            </button>
-          </div>
+          <h3>Create a Booking</h3>
+          <input
+            placeholder="Guest Name"
+            value={newBooking.guestName}
+            onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })}
+          /><br />
+          <input
+            placeholder="Room ID"
+            value={newBooking.roomId}
+            onChange={(e) => setNewBooking({ ...newBooking, roomId: e.target.value })}
+          /><br />
+          <input
+            type="date"
+            value={newBooking.checkIn}
+            onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })}
+          /><br />
+          <input
+            type="date"
+            value={newBooking.checkOut}
+            onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })}
+          /><br />
+          <input
+            type="number"
+            placeholder="Guests"
+            value={newBooking.guests}
+            onChange={(e) => setNewBooking({ ...newBooking, guests: +e.target.value })}
+          /><br />
+          <input
+            type="number"
+            placeholder="Amount (₹)"
+            value={newBooking.amount}
+            onChange={(e) => setNewBooking({ ...newBooking, amount: +e.target.value })}
+          /><br /><br />
+          <button onClick={handleBooking}>Save Booking</button>
 
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-lg font-semibold mb-4">All Bookings</h2>
-            {bookings.length === 0 ? (
-              <p>No bookings yet.</p>
-            ) : (
-              bookings.map((b) => (
-                <div key={b.id} className="border-b py-2">
-                  <p><strong>{b.guestName}</strong> - Room {b.roomId}</p>
-                  <p>{b.checkIn} to {b.checkOut} - {b.guests} guest(s) - ₹{b.amount}</p>
-                  <div className="mt-1 flex gap-2">
-                    <button
-                      onClick={() => downloadInvoice(b)}
-                      className="text-sm text-blue-600 underline"
-                    >
-                      Download Invoice
-                    </button>
-                    {user.uid === ADMIN_UID && (
-                      <button
-                        onClick={() => handleDelete(b.id)}
-                        className="text-sm text-red-600 underline"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <hr style={{ margin: '20px 0' }} />
+
+          <h3>All Bookings</h3>
+          {bookings.length === 0 ? (
+            <p>No bookings found.</p>
+          ) : (
+            bookings.map((b) => (
+              <div key={b.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: 10 }}>
+                <p><strong>Guest:</strong> {b.guestName}</p>
+                <p><strong>Room:</strong> {b.roomId}</p>
+                <p><strong>Check-in:</strong> {b.checkIn}</p>
+                <p><strong>Check-out:</strong> {b.checkOut}</p>
+                <p><strong>Guests:</strong> {b.guests}</p>
+                <p><strong>Amount:</strong> ₹{b.amount}</p>
+                <button onClick={() => downloadInvoice(b)}>Print Invoice</button>
+                {' '}
+                {user.uid === ADMIN_UID && (
+                  <button onClick={() => handleDelete(b.id)} style={{ color: 'red', marginLeft: 10 }}>
+                    Delete
+                  </button>
+                )}
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
