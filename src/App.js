@@ -113,26 +113,26 @@ const App = () => {
 
   if (!user) return (
     <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-6">
-          <h2 className="text-4xl font-bold text-center text-purple-700 mb-6">🏨 Hotel Satyam</h2>
+      <div className="w-full max-w-sm">
+        <div className="bg-white rounded-3xl shadow-2xl p-10 space-y-8">
+          <h2 className="text-4xl font-bold text-center text-purple-700 mb-8">Hotel Satyam</h2>
           <input
             type="email"
             placeholder="Email"
-            className="w-full px-6 py-4 text-lg border border-purple-300 rounded-xl focus:ring-4 focus:ring-purple-200"
+            className="w-full px-6 py-5 text-lg border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type="password"
             placeholder="Password"
-            className="w-full px-6 py-4 text-lg border border-purple-300 rounded-xl focus:ring-4 focus:ring-purple-200"
+            className="w-full px-6 py-5 text-lg border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <div className="flex gap-4">
-            <button onClick={handleLogin} className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 text-lg font-bold rounded-xl w-1/2 shadow-lg">Login</button>
-            <button onClick={handleSignup} className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-4 text-lg font-bold rounded-xl w-1/2 shadow-lg">Sign Up</button>
+          <div className="flex flex-col space-y-4">
+            <button onClick={handleLogin} className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-colors">Login</button>
+            <button onClick={handleSignup} className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-colors">Sign Up</button>
           </div>
         </div>
       </div>
@@ -140,142 +140,238 @@ const App = () => {
   );
 
   return (
-    <div className={darkMode ? "dark bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-white min-h-screen" : "bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen"}>
+    <div className={darkMode ? "dark bg-gray-900 text-white min-h-screen" : "bg-gray-100 min-h-screen"}>
       <div className="fixed top-4 right-4 z-50">
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-full text-base font-semibold shadow-lg"
+          className="bg-gray-800 text-white px-4 py-3 rounded-full text-sm font-medium shadow-lg"
         >
-          {darkMode ? '☀️ Light' : '🌙 Dark'}
+          {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
         </button>
       </div>
 
-      <div className="p-4 pb-24">
+      <div className="p-6 pb-32 min-h-screen">
         {currentPage === 'dashboard' && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4">🏠 Welcome, {user.email}</h1>
-            <p className="mb-2">Total Revenue: ₹{totalRevenue}</p>
-            <p className="mb-2">Available Rooms Today: {availableRooms}</p>
-            <ul>
-              {todayBookings.map((b) => <li key={b.id}>✅ {b.guestName} - Room {b.roomId}</li>)}
-            </ul>
+          <div className="space-y-6">
+            <h1 className="text-4xl font-bold mb-6 text-center">🏠 Welcome!</h1>
+            <div className="text-lg mb-4">{user.email}</div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold mb-3 text-green-600">💰 Total Revenue</h2>
+                <p className="text-3xl font-bold">₹{totalRevenue}</p>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold mb-3 text-blue-600">🏨 Available Rooms Today</h2>
+                <p className="text-3xl font-bold">{availableRooms}</p>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold mb-3 text-purple-600">📅 Today's Bookings</h2>
+                {todayBookings.length > 0 ? (
+                  <div className="space-y-3">
+                    {todayBookings.map((b) => (
+                      <div key={b.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                        <p className="text-lg font-semibold">✅ {b.guestName}</p>
+                        <p className="text-gray-600 dark:text-gray-300">Room {b.roomId}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-lg text-gray-500">No bookings today</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {currentPage === 'booking' && (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold">➕ New Booking</h1>
-            <input
-              type="text"
-              placeholder="Guest Name"
-              value={newBooking.guestName}
-              onChange={(e) => setNewBooking({...newBooking, guestName: e.target.value})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-            <select
-              value={newBooking.roomId}
-              onChange={(e) => setNewBooking({...newBooking, roomId: e.target.value})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="">Select Room</option>
-              {rooms.map(room => <option key={room} value={room}>Room {room}</option>)}
-            </select>
-            <input
-              type="date"
-              placeholder="Check-in"
-              value={newBooking.checkIn}
-              onChange={(e) => setNewBooking({...newBooking, checkIn: e.target.value})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-            <input
-              type="date"
-              placeholder="Check-out"
-              value={newBooking.checkOut}
-              onChange={(e) => setNewBooking({...newBooking, checkOut: e.target.value})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-            <input
-              type="number"
-              placeholder="Number of Guests"
-              value={newBooking.guests}
-              onChange={(e) => setNewBooking({...newBooking, guests: parseInt(e.target.value)})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-            <input
-              type="number"
-              placeholder="Total Amount"
-              value={newBooking.amount}
-              onChange={(e) => setNewBooking({...newBooking, amount: parseFloat(e.target.value)})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-            <input
-              type="number"
-              placeholder="Advance Payment"
-              value={newBooking.advance}
-              onChange={(e) => setNewBooking({...newBooking, advance: parseFloat(e.target.value)})}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-            <button
-              onClick={handleBooking}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg font-bold"
-            >
-              💾 Save Booking
-            </button>
+          <div className="space-y-6">
+            <h1 className="text-4xl font-bold text-center mb-8">➕ New Booking</h1>
+            
+            <div className="space-y-5">
+              <input
+                type="text"
+                placeholder="Guest Name"
+                value={newBooking.guestName}
+                onChange={(e) => setNewBooking({...newBooking, guestName: e.target.value})}
+                className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+              />
+              
+              <select
+                value={newBooking.roomId}
+                onChange={(e) => setNewBooking({...newBooking, roomId: e.target.value})}
+                className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">Select Room</option>
+                {rooms.map(room => <option key={room} value={room}>Room {room}</option>)}
+              </select>
+              
+              <div>
+                <label className="block text-lg font-semibold mb-2">Check-in Date</label>
+                <input
+                  type="date"
+                  value={newBooking.checkIn}
+                  onChange={(e) => setNewBooking({...newBooking, checkIn: e.target.value})}
+                  className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-lg font-semibold mb-2">Check-out Date</label>
+                <input
+                  type="date"
+                  value={newBooking.checkOut}
+                  onChange={(e) => setNewBooking({...newBooking, checkOut: e.target.value})}
+                  className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              
+              <input
+                type="number"
+                placeholder="Number of Guests"
+                value={newBooking.guests}
+                onChange={(e) => setNewBooking({...newBooking, guests: parseInt(e.target.value)})}
+                className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+              />
+              
+              <input
+                type="number"
+                placeholder="Total Amount (₹)"
+                value={newBooking.amount}
+                onChange={(e) => setNewBooking({...newBooking, amount: parseFloat(e.target.value)})}
+                className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+              />
+              
+              <input
+                type="number"
+                placeholder="Advance Payment (₹)"
+                value={newBooking.advance}
+                onChange={(e) => setNewBooking({...newBooking, advance: parseFloat(e.target.value)})}
+                className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+              />
+              
+              <button
+                onClick={handleBooking}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-6 rounded-xl text-xl font-bold shadow-lg transition-all transform hover:scale-105"
+              >
+                💾 Save Booking
+              </button>
+            </div>
           </div>
         )}
 
         {currentPage === 'history' && (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold">📋 Booking History</h1>
-            <input
-              type="text"
-              placeholder="Search by guest name"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            />
-            <button
-              onClick={exportBookingsToExcel}
-              className="bg-yellow-500 text-white px-4 py-2 rounded"
-            >
-              📥 Export to Excel
-            </button>
-            {filteredBookings.map(b => (
-              <div key={b.id} className="p-4 bg-white dark:bg-gray-800 rounded shadow">
-                <h2 className="font-bold">{b.guestName} - Room {b.roomId}</h2>
-                <p>₹{b.amount} | Advance ₹{b.advance}</p>
-                <p>{b.checkIn} ➡ {b.checkOut}</p>
-                <button
-                  onClick={() => downloadInvoice(b)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded"
-                >
-                  📄 Invoice
-                </button>
-                {user.uid === ADMIN_UID && (
-                  <button
-                    onClick={() => handleDelete(b.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded ml-2"
-                  >
-                    🗑️ Delete
-                  </button>
-                )}
+          <div className="space-y-6">
+            <h1 className="text-4xl font-bold text-center mb-8">📋 Booking History</h1>
+            
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="🔍 Search by guest name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:outline-none"
+              />
+              
+              <div>
+                <label className="block text-lg font-semibold mb-2">Filter by Date</label>
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full p-5 text-lg rounded-xl border-2 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:outline-none"
+                />
               </div>
-            ))}
+              
+              <button
+                onClick={exportBookingsToExcel}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-4 rounded-xl text-lg font-semibold shadow-lg transition-colors"
+              >
+                📥 Export to Excel
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {filteredBookings.map(b => (
+                <div key={b.id} className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+                  <h2 className="text-2xl font-bold mb-3">{b.guestName}</h2>
+                  <div className="text-lg mb-2">🏨 Room {b.roomId}</div>
+                  <div className="text-lg mb-2">💰 ₹{b.amount} | Advance ₹{b.advance}</div>
+                  <div className="text-lg mb-4">📅 {b.checkIn} ➡ {b.checkOut}</div>
+                  <div className="text-lg mb-4">👥 {b.guests} Guest{b.guests > 1 ? 's' : ''}</div>
+                  
+                  <div className="flex flex-col space-y-3">
+                    <button
+                      onClick={() => downloadInvoice(b)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg font-semibold transition-colors"
+                    >
+                      📄 Download Invoice
+                    </button>
+                    {user.uid === ADMIN_UID && (
+                      <button
+                        onClick={() => handleDelete(b.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-semibold transition-colors"
+                      >
+                        🗑️ Delete Booking
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {filteredBookings.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">😔</div>
+                  <p className="text-xl text-gray-500">No bookings found</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4 flex justify-around border-t">
-        <button onClick={() => setCurrentPage('dashboard')} className="text-xl">🏠</button>
-        <button onClick={() => setCurrentPage('booking')} className="text-xl">➕</button>
-        <button onClick={() => setCurrentPage('history')} className="text-xl">📋</button>
-        <button onClick={handleLogout} className="text-xl text-red-500">🚪</button>
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700 shadow-2xl">
+        <div className="grid grid-cols-4 h-20">
+          <button 
+            onClick={() => setCurrentPage('dashboard')} 
+            className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
+              currentPage === 'dashboard' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <span className="text-2xl">🏠</span>
+            <span className="text-xs font-semibold">Home</span>
+          </button>
+          
+          <button 
+            onClick={() => setCurrentPage('booking')} 
+            className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
+              currentPage === 'booking' ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <span className="text-2xl">➕</span>
+            <span className="text-xs font-semibold">Book</span>
+          </button>
+          
+          <button 
+            onClick={() => setCurrentPage('history')} 
+            className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
+              currentPage === 'history' ? 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <span className="text-2xl">📋</span>
+            <span className="text-xs font-semibold">History</span>
+          </button>
+          
+          <button 
+            onClick={handleLogout} 
+            className="flex flex-col items-center justify-center space-y-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <span className="text-2xl">🚪</span>
+            <span className="text-xs font-semibold">Logout</span>
+          </button>
+        </div>
       </div>
     </div>
   );
