@@ -112,27 +112,27 @@ const App = () => {
   });
 
   if (!user) return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-center text-purple-700">Hotel Satyam</h2>
+          <h2 className="text-4xl font-bold text-center text-purple-700 mb-6">🏨 Hotel Satyam</h2>
           <input
             type="email"
             placeholder="Email"
-            className="w-full px-4 py-3 border border-purple-300 rounded-lg"
+            className="w-full px-6 py-4 text-lg border border-purple-300 rounded-xl focus:ring-4 focus:ring-purple-200"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type="password"
             placeholder="Password"
-            className="w-full px-4 py-3 border border-purple-300 rounded-lg"
+            className="w-full px-6 py-4 text-lg border border-purple-300 rounded-xl focus:ring-4 focus:ring-purple-200"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <div className="flex justify-between">
-            <button onClick={handleLogin} className="bg-indigo-500 text-white px-4 py-2 rounded w-1/2 mr-2">Login</button>
-            <button onClick={handleSignup} className="bg-green-500 text-white px-4 py-2 rounded w-1/2 ml-2">Sign Up</button>
+          <div className="flex gap-4">
+            <button onClick={handleLogin} className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 text-lg font-bold rounded-xl w-1/2 shadow-lg">Login</button>
+            <button onClick={handleSignup} className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-4 text-lg font-bold rounded-xl w-1/2 shadow-lg">Sign Up</button>
           </div>
         </div>
       </div>
@@ -140,13 +140,13 @@ const App = () => {
   );
 
   return (
-    <div className={darkMode ? "dark bg-gray-900 text-white min-h-screen" : "bg-gray-100 min-h-screen"}>
-      <div className="fixed top-2 right-2 z-50">
+    <div className={darkMode ? "dark bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-white min-h-screen" : "bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen"}>
+      <div className="fixed top-4 right-4 z-50">
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className="bg-gray-800 text-white px-3 py-1 rounded-full text-xs"
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-full text-base font-semibold shadow-lg"
         >
-          {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          {darkMode ? '☀️ Light' : '🌙 Dark'}
         </button>
       </div>
 
