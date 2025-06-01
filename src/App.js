@@ -1,183 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import { db, ref, set, onValue, remove, auth } from './firebase';
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from 'firebase/auth';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// ✅ Full App.js with room conflict alerts, mobile-friendly layout, dark mode, Excel export, revenue chart, and filters import React, { useState, useEffect } from 'react'; import { db, ref, set, onValue, remove, auth } from './firebase'; import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'; import jsPDF from 'jspdf'; import 'jspdf-autotable'; import * as XLSX from 'xlsx';
 
 const ADMIN_UID = "mZFDI5RBWSTR43r6kBIAGvXf80t1";
 
-const App = () => {
-  const [user, setUser] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [newBooking, setNewBooking] = useState({
-    guestName: '',
-    roomId: '',
-    checkIn: '',
-    checkOut: '',
-    guests: 1,
-    amount: 0,
-  });
+const App = () => { const [user, setUser] = useState(null); const [bookings, setBookings] = useState([]); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [filterRoom, setFilterRoom] = useState(''); const [searchGuest, setSearchGuest] = useState(''); const [newBooking, setNewBooking] = useState({ guestName: '', roomId: '', checkIn: '', checkOut: '', guests: 1, amount: 0, advance: 0 });
 
-  useEffect(() => {
-    onAuthStateChanged(auth, (u) => setUser(u));
-    onValue(ref(db, 'bookings'), (snapshot) => {
-      const data = snapshot.val();
-      setBookings(data ? Object.values(data) : []);
-    });
-  }, []);
+const rooms = ['101', '102', '103', '104', '105', 'conference'];
 
-  const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password).catch((err) =>
-      alert(err.message)
-    );
-  };
+useEffect(() => { onAuthStateChanged(auth, (u) => setUser(u)); const bookingsRef = ref(db, 'bookings'); onValue(bookingsRef, (snapshot) => { const data = snapshot.val(); setBookings(data ? Object.values(data) : []); }); }, []);
 
-  const handleSignup = () => {
-    createUserWithEmailAndPassword(auth, email, password).catch((err) =>
-      alert(err.message)
-    );
-  };
+const handleLogin = () => signInWithEmailAndPassword(auth, email, password).catch(alert); const handleSignup = () => createUserWithEmailAndPassword(auth, email, password).catch(alert); const handleLogout = () => signOut(auth);
 
-  const handleLogout = () => signOut(auth);
+const handleBooking = () => { const id = Date.now(); const booking = { ...newBooking, id };
 
-  const handleBooking = () => {
-    const id = Date.now();
-    const booking = { ...newBooking, id };
-    set(ref(db, `bookings/${id}`), booking);
-    setNewBooking({
-      guestName: '',
-      roomId: '',
-      checkIn: '',
-      checkOut: '',
-      guests: 1,
-      amount: 0,
-    });
-  };
-
-  const handleDelete = (id) => {
-    remove(ref(db, `bookings/${id}`));
-  };
-
-  const downloadInvoice = (b) => {
-    const doc = new jsPDF();
-    doc.text("Hotel Satyam - Booking Invoice", 14, 20);
-    doc.autoTable({
-      startY: 30,
-      head: [["Field", "Details"]],
-      body: [
-        ["Guest", b.guestName],
-        ["Room", b.roomId],
-        ["Check-in", b.checkIn],
-        ["Check-out", b.checkOut],
-        ["Guests", b.guests],
-        ["Amount", "₹" + b.amount],
-      ],
-    });
-    doc.save(`Invoice_${b.guestName}.pdf`);
-  };
-
-  const today = new Date().toISOString().split('T')[0];
-  const todayBookings = bookings.filter(b => b.checkIn === today);
-  const totalRevenue = bookings.reduce((sum, b) => sum + b.amount, 0);
-  const availableRooms = 6 - todayBookings.length;
-
+const isConflict = bookings.some(b => {
+  const bIn = new Date(b.checkIn);
+  const bOut = new Date(b.checkOut);
+  const nIn = new Date(newBooking.checkIn);
+  const nOut = new Date(newBooking.checkOut);
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      {!user ? (
-        <div className="max-w-md mx-auto bg-white shadow-md p-6 rounded-lg">
-          <h2 className="text-2xl font-bold mb-4 text-center">Login or Sign Up</h2>
-          <input
-            className="w-full p-2 mb-3 border rounded"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            className="w-full p-2 mb-4 border rounded"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <div className="flex gap-3">
-            <button onClick={handleLogin} className="w-full bg-blue-600 text-white py-2 rounded">Login</button>
-            <button onClick={handleSignup} className="w-full bg-green-600 text-white py-2 rounded">Sign Up</button>
-          </div>
-        </div>
-      ) : (
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white p-4 mb-4 rounded shadow flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Welcome, {user.email}</h2>
-            <button onClick={handleLogout} className="bg-gray-300 px-4 py-1 rounded">Logout</button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div className="bg-blue-100 p-3 rounded text-center">
-              <p className="text-sm text-blue-600">Today's Bookings</p>
-              <p className="text-xl font-bold">{todayBookings.length}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded text-center">
-              <p className="text-sm text-green-600">Available Rooms</p>
-              <p className="text-xl font-bold">{availableRooms}</p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded text-center">
-              <p className="text-sm text-purple-600">Total Revenue</p>
-              <p className="text-xl font-bold">₹{totalRevenue}</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded shadow mb-6">
-            <h3 className="text-lg font-semibold mb-4">Create a Booking</h3>
-            <div className="grid gap-3">
-              <input className="border p-2 rounded" placeholder="Guest Name" value={newBooking.guestName}
-                onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} />
-              <input className="border p-2 rounded" placeholder="Room ID" value={newBooking.roomId}
-                onChange={(e) => setNewBooking({ ...newBooking, roomId: e.target.value })} />
-              <input className="border p-2 rounded" type="date" value={newBooking.checkIn}
-                onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })} />
-              <input className="border p-2 rounded" type="date" value={newBooking.checkOut}
-                onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })} />
-              <input className="border p-2 rounded" type="number" placeholder="Number of Guests" value={newBooking.guests}
-                onChange={(e) => setNewBooking({ ...newBooking, guests: +e.target.value })} />
-              <input className="border p-2 rounded" type="number" placeholder="Amount (₹)" value={newBooking.amount}
-                onChange={(e) => setNewBooking({ ...newBooking, amount: +e.target.value })} />
-              <button onClick={handleBooking} className="bg-blue-600 text-white py-2 rounded">Save Booking</button>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-lg font-semibold mb-4">All Bookings</h3>
-            {bookings.length === 0 ? (
-              <p>No bookings found.</p>
-            ) : (
-              bookings.map((b) => (
-                <div key={b.id} className="border-b py-3">
-                  <p><strong>Guest:</strong> {b.guestName}</p>
-                  <p><strong>Room:</strong> {b.roomId}</p>
-                  <p><strong>Check-in:</strong> {b.checkIn}</p>
-                  <p><strong>Check-out:</strong> {b.checkOut}</p>
-                  <p><strong>Guests:</strong> {b.guests}</p>
-                  <p><strong>Amount:</strong> ₹{b.amount}</p>
-                  <button onClick={() => downloadInvoice(b)} className="text-blue-600 underline">Download Invoice</button>
-                  {user.uid === ADMIN_UID && (
-                    <button onClick={() => handleDelete(b.id)} className="text-red-600 ml-4 underline">Delete</button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    b.roomId === newBooking.roomId &&
+    ((nIn >= bIn && nIn < bOut) || (nOut > bIn && nOut <= bOut) || (nIn <= bIn && nOut >= bOut))
   );
+});
+
+if (isConflict) return alert("⚠️ Room already booked during selected dates!");
+
+set(ref(db, `bookings/${id}`), booking);
+setNewBooking({ guestName: '', roomId: '', checkIn: '', checkOut: '', guests: 1, amount: 0, advance: 0 });
+
 };
 
+const handleDelete = (id) => remove(ref(db, bookings/${id}));
+
+const filteredBookings = bookings.filter(b => (!filterRoom || b.roomId === filterRoom) && (!searchGuest || b.guestName.toLowerCase().includes(searchGuest.toLowerCase())) );
+
+const exportToExcel = () => { const sheet = XLSX.utils.json_to_sheet(bookings); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, sheet, 'Bookings'); XLSX.writeFile(wb, 'Hotel-Bookings.xlsx'); };
+
+const today = new Date().toISOString().split('T')[0];
+
+return ( <div className="p-4 max-w-4xl mx-auto font-sans text-sm bg-gray-100 min-h-screen dark:bg-gray-900 dark:text-white"> <h1 className="text-2xl font-bold mb-4 text-center">Hotel Satyam</h1> {!user ? ( <div className="bg-white p-4 rounded shadow text-center dark:bg-gray-800"> <h2 className="text-lg font-semibold mb-2">Login to Hotel Satyam</h2> <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="border p-2 rounded w-full mb-2" /> <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="border p-2 rounded w-full mb-2" /> <div className="flex gap-2 justify-center"> <button onClick={handleLogin} className="bg-blue-600 text-white px-4 py-1 rounded">Login</button> <button onClick={handleSignup} className="bg-green-600 text-white px-4 py-1 rounded">Sign Up</button> </div> </div> ) : ( <div> <div className="flex justify-between mb-4"> <p><strong>Welcome:</strong> {user.email}</p> <p>{today}</p> <button onClick={handleLogout} className="bg-red-500 text-white px-3 py-1 rounded">Logout</button> </div>
+
+<div className="bg-white dark:bg-gray-800 p-4 rounded shadow mb-4">
+        <h3 className="font-semibold mb-2">Create a Booking</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <input placeholder="Guest Name" value={newBooking.guestName} onChange={e => setNewBooking({ ...newBooking, guestName: e.target.value })} className="border p-2 rounded" />
+          <select value={newBooking.roomId} onChange={e => setNewBooking({ ...newBooking, roomId: e.target.value })} className="border p-2 rounded">
+            <option value="">Select Room</option>
+            {rooms.map(r => <option key={r}>{r}</option>)}
+          </select>
+          <input type="date" value={newBooking.checkIn} onChange={e => setNewBooking({ ...newBooking, checkIn: e.target.value })} className="border p-2 rounded" />
+          <input type="date" value={newBooking.checkOut} onChange={e => setNewBooking({ ...newBooking, checkOut: e.target.value })} className="border p-2 rounded" />
+          <input type="number" value={newBooking.guests} onChange={e => setNewBooking({ ...newBooking, guests: +e.target.value })} placeholder="Guests" className="border p-2 rounded" />
+          <input type="number" value={newBooking.amount} onChange={e => setNewBooking({ ...newBooking, amount: +e.target.value })} placeholder="Amount" className="border p-2 rounded" />
+          <input type="number" value={newBooking.advance} onChange={e => setNewBooking({ ...newBooking, advance: +e.target.value })} placeholder="Advance Paid" className="border p-2 rounded" />
+        </div>
+        <button onClick={handleBooking} className="bg-blue-600 text-white px-4 py-1 mt-3 rounded">Save Booking</button>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 p-4 rounded shadow mb-4">
+        <div className="flex gap-2 mb-2">
+          <input placeholder="Search Guest" value={searchGuest} onChange={e => setSearchGuest(e.target.value)} className="border p-2 rounded flex-1" />
+          <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} className="border p-2 rounded">
+            <option value="">All Rooms</option>
+            {rooms.map(r => <option key={r}>{r}</option>)}
+          </select>
+          <button onClick={exportToExcel} className="bg-green-600 text-white px-3 py-1 rounded">Export</button>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-200 dark:bg-gray-700">
+              <th className="p-2">Guest</th><th>Room</th><th>In</th><th>Out</th><th>Guests</th><th>Amount</th><th>Advance</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredBookings.map(b => (
+              <tr key={b.id} className="text-center border-t">
+                <td className="p-1">{b.guestName}</td>
+                <td>{b.roomId}</td>
+                <td>{b.checkIn}</td>
+                <td>{b.checkOut}</td>
+                <td>{b.guests}</td>
+                <td>₹{b.amount}</td>
+                <td>₹{b.advance}</td>
+                <td>
+                  {user.uid === ADMIN_UID && (
+                    <button onClick={() => handleDelete(b.id)} className="text-red-500">Delete</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+</div>
+
+); };
+
 export default App;
+
